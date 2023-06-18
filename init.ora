@@ -1,0 +1,83 @@
+#######################################################
+#Archive
+#######################################################
+log_archive_dest='LOCATION=USE_DB_RECOVERY_FILE_DEST'
+log_archive_format=%t_%s_%r.arc
+
+########################################################
+# Cache and I/O
+########################################################
+db_block_size_8192
+
+#######################################################
+# Cursors and Library Cache
+#######################################################
+open_cursors=300
+
+#######################################################
+# Database Identification
+#######################################################
+db_domain= 'REPLACE_DB_DOOMAIN'
+db_name='REPLACE_DBNAME'
+
+########################################################
+# File Configuration
+#######################################################
+db_create_file_dest='+DATA'
+db_create_online_log_dest_1=+DATA
+db_create_online_log_dest_2=+FLASH
+db_recovery_file_dest='+FLASH'
+db_recovery_file_dest=20G
+
+#######################################################
+# Miscellaneous
+#######################################################
+compatible=19.0.0
+diagnostic_Dest=/opt/oracle
+control_file_record_keep_time=45
+
+#######################################################
+# Network Registration
+#######################################################
+#local_listener=LISTENER_REPLACE_DBNAME
+
+#######################################################
+# Process and Sessions
+#######################################################
+process=300
+
+#######################################################
+# SGA Memory
+#######################################################
+sga_target=1500m
+
+#######################################################
+# Security and Auditing
+#######################################################
+audit_file_dest='/opt/oracle/diag/rdbms/replace_dbname/REPLACE_DBNAME/adump'
+audit_sys_operations='TRUE'
+audit_trail=db
+global_names='TRUE'
+job_queue_processes=10
+os_authent_prefix=''
+remote_login_passwordfile='EXCLUSIVE'
+remote_os_roles='FALSE'
+resource_limit='TRUE'
+sec_max_failed_login_attempts=3
+sec_protocol_error_further_action='DROP,3'
+sql92_security='TRUE'
+
+#######################################################
+# Sort, Hash Joins, Bitmap Indexes
+#######################################################
+pga_aggregate_target=500m
+
+#######################################################
+# System Managed Undo and Rollback Segments
+#######################################################
+undo_tablespace=UNDOTBS1
+
+#######################################################
+# Application Specific
+#######################################################
+
