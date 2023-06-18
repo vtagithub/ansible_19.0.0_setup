@@ -88,7 +88,7 @@
          END LOOP;
         END LOOP;
         IF isdigit=FALSE THEN
-          raise_application_error(-2003,
+          raise_application_error(-20003,
           'Password should contain at least three digits');
         END IF;
 ----------------------------------------------------------------------------------------------------------------------
@@ -192,12 +192,12 @@
                <<findlowchar>> isupchar:=FALSE;
      numlowchar:=0;
    m         :=LENGTH(password);
-   FOR i     IN 1..length(lowchararray)
+   FOR i     IN 1..length(punctarray)
    LOOP
      FOR j  IN 1..m
      LOOP
        IF SUBSTR(password,j,1)=SUBSTR(upcharray,i,1) THEN
-         numupchar            :=numupchar + 1;
+         numpunct            :=numpunct + 1;
            
 
        
