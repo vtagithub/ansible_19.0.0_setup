@@ -9,6 +9,6 @@ elif [ -e $HOME/.bash_profile ]
 then    
         . $HOME/.bash_profile
  else
-        ehco "A profile does not exit"
+        echo "A profile does not exit"
  fi
  export ARGS=`echo $@ 
