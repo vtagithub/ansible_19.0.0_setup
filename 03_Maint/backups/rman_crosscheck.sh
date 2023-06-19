@@ -26,3 +26,21 @@ cd $HOME/bin
 export PATH=$ORACLE_HOME/bin:$PATH
 export RUNTIME=`date +%m%d%y-%H%M%S`
 export RMANPASS=`openssl enc -in rman.pass -d -aes256 -k symmetrickey'
+cat $ORATAB | grep -v "^#  | grep -v "^$" | grep -v "*" | grep-v "+ASM" | awk -F: '{print $1} | whle read ORACLE_SID
+do
+
+. oraenv -s
+
+rman target / log $HOME/log/"$ORACLE_SID"_LEVEL0Pbackup-"$RUNTIME".log<<EOF
+         run
+         {      
+                allocate channel T1 type 'sbt_tape' PARMS 'ENV=(TDPO_OPTFILE=/opt/tivoli/tsm/client/oracle/bin64/tdpo.opt)' MAXPIECESIZE 10G;
+                crosscheck backup;
+                delete noprompt expired backup;
+                delete noprompt obsolete;
+                release channel t1;
+          }
+          quit
+EOF
+RC=$?
+
