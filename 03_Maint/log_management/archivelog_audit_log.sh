@@ -22,4 +22,12 @@ then
       echo "An oratab file does not exists"
 fi
 export DATE=`date +%Y%m%d-%H%M`
+cat $ORATAB | grep -v "^#  | grep -v "^$" | grep -v "*" | grep-v "+ASM" | awk -F: '{print $1} | whle read ORACLE_SID
+do
+        cd $ORACLE_BASE/admin/$ORACLE_SID/bdump
+        find . -name '*.aud' -mtime +1 |xargs -n1 -I{} mv {} ./archive/{}.$DATE
+        cd ./archive
+        find . -name "*.$DATE" -exec gzip {} \;
+done
+##############################################################################################################
 
