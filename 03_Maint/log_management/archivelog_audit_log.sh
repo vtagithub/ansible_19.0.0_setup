@@ -21,3 +21,5 @@ then
  else
       echo "An oratab file does not exists"
 fi
+export DATE=`date +%Y%m%d-%H%M`
+
