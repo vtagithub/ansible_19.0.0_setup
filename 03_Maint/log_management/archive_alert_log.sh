@@ -23,3 +23,10 @@ then
 fi
 cat $ORATAB | grep -v "^#  | grep -v "^$" | grep -v "*" | grep-v "+ASM" | awk -F: '{print $1} | whle read ORACLE_SID
 do
+        cd $ORACLE_BASE/admin/$ORACLE_SID/bdump
+        cp alert_$ORACLE_SID.log alert_$ORACLE_SID.log.$DATE
+        cat /dev/null > alert_$ORACLE_SID.log
+        gzip alert_$ORACLE_SID.log.$DATE
+        mv -i alert_$ORACLE_SID.log.$DATE.gz ./archive
+done
+##############################################################################################################
