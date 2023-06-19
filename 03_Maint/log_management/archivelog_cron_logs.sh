@@ -12,3 +12,7 @@ then
         ehco "A profile does not exit"
  fi
  export DATE=`date +%Y%m%d-%H%M`
+ cd $HOME/log
+ find . -name '*.aud' -mtime +1 |xargs -n1 -I{} mv {} ./archive/{}.$DATE
+ cd ./archive
+ find . -name "*.$DATE" -exec gzip {} \;
