@@ -11,3 +11,4 @@ then
  else
         ehco "A profile does not exit"
  fi
+ export ARGS=`echo $@ 
