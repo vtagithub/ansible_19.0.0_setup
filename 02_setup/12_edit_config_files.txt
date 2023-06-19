@@ -1,0 +1,54 @@
+REM	=======================================================
+REM	12_edit_config_files.txt
+
+REM	=======================================================
+vi $TNS_ADMIN/listener.ora
+------------------------------------------------------------
+ADR_BASE_LISTENER=/opt/grid
+ADR_BASE_LISTENER2=/opt/grid
+
+ENABLE_GLOBAL_DYNAMIC_ENDPOINT_LISTENER=ON
+ENABLE_GLOBAL_DYNAMIC_ENDPOINT_LISTENER2=ON
+
+SECURE_REGISTER_LISTENER=(TCP)
+SECURE_REGISTER_LISTENER2=(TCP)
+
+ADMIN_RESTRICTIONS_LISTENER=ON
+ADMIN_RESTRICTIONS_LISTENER2=ON
+
+INBOUND_CONNECT_TIMEOUT_LISTENER=60
+INBOUND_CONNECT_TIMEOUT_LISTENER2=60
+
+TRACE_LEVEL_LISTENER=OFF
+TRACE_LEVEL_LISTENER2=OFF
+
+LOGGING_LISTENER=ON
+LOGGING_LISTENER2=ON
+
+
+CONNECTION_RATE_LISTENER=10
+CONNECTION_RATE_LISTENER2=10
+
+---------------------------------------------------------------------------
+vi $TNSADMIN/sqlnet.ora
+---------------------------------------------------------------------------
+NAMES.DICTORY_PATH=(TNSNAMES, EZCONNECT)
+
+ADR_BASE=/opt/grid
+TRACE_LEVEL_SERVER=OFF
+
+SQLNET.INBOUND_CONNECT_TIMEOUT=90
+SQLNET.EXPIRE_TIME=60
+
+ALLOWED_LOGON_VERSION_SERVER=11
+ALLOWED_LOGON_VERSION_CLIENT=11
+---------------------------------------------------------------------------
+vi $ORACLE_HOME/hs/amdin/extproc.ora
+--  V0061685 (skip for OEM servers
+----------------------------------------------------------------------------
+EXTPRPC_DLLS=ONLY
+----------------------------------------------------------------------------
+
+
+
+
