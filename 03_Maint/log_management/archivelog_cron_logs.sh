@@ -11,3 +11,4 @@ then
  else
         ehco "A profile does not exit"
  fi
+ export DATE=`date +%Y%m%d-%H%M`
