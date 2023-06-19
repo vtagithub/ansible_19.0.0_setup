@@ -44,3 +44,18 @@ rman target / log $HOME/log/"$ORACLE_SID"_LEVEL0Pbackup-"$RUNTIME".log<<EOF
 EOF
 RC=$?
 
+rman target / catalog rman/$RMANPASS@ALTDBARP log $HOME/log/resync_output.log<<EOF
+      resync catalog;
+      quit
+EOF
+
+      cat $HOME/log/resync_output.log >> $HOME/log/"ORACLE_SID"_rman_crosscheck-"$RUNTIME".log
+      rm $HOME/log/resync_output.log
+      
+      echo "Database Backup Complete" >> $HOME/log/"$ORACLE_SID"_rman_crosscheck-"$RUNTIME".log
+      echo "Return COde:" $RC >> $HOME/log/"ORACLE_SID"_rman_crosscheck-"$RUNTIME".log
+      echo "---------------------end of file--------------------"  >> $HOME/log/"$ORACLE_SID"_rman_crosscheck-"$RUNTIME".log
+      
+done
+exit $RC
+
