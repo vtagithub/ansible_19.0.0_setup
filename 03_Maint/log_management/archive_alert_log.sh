@@ -21,3 +21,5 @@ then
  else
       echo "An oratab file does not exists"
 fi
+cat $ORATAB | grep -v "^#  | grep -v "^$" | grep -v "*" | grep-v "+ASM" | awk -F: '{print $1} | whle read ORACLE_SID
+do
