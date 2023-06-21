@@ -1,5 +1,5 @@
 REM	#######################################################
-REM	04c_create_vdc_profiles.sql
+REM	04c_create_vta_profiles.sql
 REM	#######################################################
 CREATE PROFILE "INFORMAT_PROFILE"
 LIMIT
