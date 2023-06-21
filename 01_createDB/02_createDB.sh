@@ -3,7 +3,7 @@
 # 02_CrateDB.sh
 #######################################################
 
-OLD_UMASK-`umask`
+OLD_UMASK=`umask`
 umask 0027
 mkdir -p $ORACLE_BASE/amdin/$ORACLE_SID/adump
 mkdir -p $ORACLE_BASE/amdin/$ORACLE_SID/dpdump
