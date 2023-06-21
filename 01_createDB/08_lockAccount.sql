@@ -12,8 +12,8 @@ BEGIN
   dbms_output.put_line('Locking and Expiring: ' || item.USERNAME);
   execute immediate 'alter user ' ||
           sys.dbms_assert.enquote_name(
-		  sys.dbms_assert.schema_name(
-		  item.USERNAME),false) || ' password expire account lock' ;
+	  sys.dbms_assert.schema_name(
+	  item.USERNAME),false) || ' password expire account lock' ;
   END LOOP;
 END;
 /
