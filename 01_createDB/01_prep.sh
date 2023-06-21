@@ -24,7 +24,7 @@ mkdir -p /opt/oracle/diag/rdbms/$oracle_sid/$ORACLE_SID/adump/archive
 if [ $OS=SunOS ]
 then
 	cp -rp /var/opt/oracle/oratab ./oratab
-	echo $ORACLE_SID:P /opt/oracle/product/19.0.0/db:N >> /var/opt/oracle/oratab
+	echo $ORACLE_SID:/opt/oracle/product/19.0.0/db:N >> /var/opt/oracle/oratab
 
 else
 	cp -rp /etc/oratab ./oratab
