@@ -11,7 +11,7 @@
           export ORACLE_HOME={{ oracle_home }}
           export ORACLE_SID={{ db_name }};
           export PATH=$PATH:$ORACLE_HOME/bin;
-          echo "{{ item }} ";" | {{ oracle_home }}/bin/sqlplus / as sysdba
+          echo "{{ item }};" | {{ oracle_home }}/bin/sqlplus / as sysdba
         register: sqlplus_dbavalidate
         # failed_when: " 'ERROR' in sqlplus _Dbvalidate.stdout or sqlpplus_dbvalidate.rc != 0"
         with_items:
