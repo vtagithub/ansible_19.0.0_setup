@@ -12,7 +12,7 @@
           export ORACLE_SID={{ db_name }};
           export PATH=$PATH:$ORACLE_HOME/bin;
           echo "{{ item }};" | {{ oracle_home }}/bin/sqlplus / as sysdba
-        register: sqlplus_dbavalidate
+        register: sqlplus_dbvalidate
         # failed_when: " 'ERROR' in sqlplus _Dbvalidate.stdout or sqlpplus_dbvalidate.rc != 0"
         with_items:
             - "select name, open_mode, database_role from v\$database"
