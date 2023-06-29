@@ -1,0 +1,361 @@
+---
+- name: Install Oracle Database 19c
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Disable Transparent Huge Pages
+      lineinfile:
+        dest: /etc/rc.local
+        line: 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'
+        insertbefore: BOF
+        create: yes
+      notify: Reboot server
+
+    - name: Install required packages
+      yum:
+        name:
+          - bc
+          - binutils
+          - elfutils-libelf
+          - elfutils-libelf-devel
+          - fontconfig-devel
+          - glibc
+          - ksh
+          - libaio
+          - libaio-devel
+          - libgcc
+          - libstdc++
+          - libstdc++-devel
+          - libX11
+          - libXau
+          - libxcb
+          - libXi
+          - libXrender
+          - libXrender-devel
+          - libXtst
+          - make
+          - net-tools
+          - nfs-utils
+          - python3
+          - smartmontools
+          - sysstat
+          - targetcli
+          - unzip
+        state: present
+
+    - name: Set sysctl parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      with_items:
+        - { name: 'fs.file-max', value: '6815744' }
+        - { name: 'kernel.sem', value: '250 32000 100 128' }
+        - { name: 'kernel.shmmni', value: '4096' }
+        - { name: 'kernel.shmall', value: '1073741824' }
+        - { name: 'kernel.shmmax', value: '4398046511104' }
+        - { name: 'kernel.panic_on_oops', value: '1' }
+        - { name: 'net.core.rmem_default', value: '262144' }
+        - { name: 'net.core.rmem_max', value: '4194304' }
+        - { name: 'net.core.wmem_default', value: '262144' }
+        - { name: 'net.core.wmem_max', value: '1048576' }
+        - { name: 'net.ipv4.conf.all.rp_filter', value: '2' }
+        - { name: 'net.ipv4.conf.default.rp_filter', value: '2' }
+        - { name: 'fs.aio-max-nr', value: '1048576' }
+        - { name: 'net.ipv4.ip_local_port_range', value: '9000 65500' }
+
+    - name: Create Oracle limits configuration
+      blockinfile:
+        path: /etc/security/limits.d/97-oracle.conf
+        block: |
+          oracle   soft   nofile     1024
+          oracle   hard   nofile     65536
+          oracle   soft   nproc      16384
+          oracle   hard   nproc      16384
+          oracle   soft   stack      10240
+          oracle   hard   stack      32768
+          oracle   hard   memlock     134217728
+          oracle   soft   memlock     134217728
+        create: yes
+        backup: yes
+        mode: '0644'
+
+    - name: Create Oracle groups
+      group:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - oinstall
+        - dba
+        - oper
+
+    - name: Create oinstall group
+      group:
+        name: oinstall
+        gid: 1001
+
+    - name: Create dba group
+      group:
+        name: dba
+        gid: 1002
+
+    - name: Create oper group
+      group:
+        name: oper
+        gid: 1003
+
+    - name: Create user with groups
+      user:
+        name: oracle
+        uid: 1001
+        groups:
+          - oinstall
+          - dba
+          - oper
+        shell: /bin/bash
+        home: /home/oracle
+        create_home: yes
+        system: no
+
+    - name: Disable SELinux
+      selinux:
+        policy: targeted
+        state: disabled
+      notify: Reboot server
+
+    - name: Create Oracle directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0775'
+      with_items:
+        - /u01/app/oracle/product/19.3/dbhome_1
+        - /u01
+
+    - name: Copy Oracle Home Installer
+      copy:
+        src: /tmp/LINUX.X64_193000_db_home.zip
+        dest: /u01/app/oracle/product/19.3/dbhome_1/LINUX.X64_193000_db_home.zip
+        owner: oracle
+        group: oinstall
+        mode: '0644'
+
+    - name: Unzip Oracle Home Installer
+      unarchive:
+        src: /u01/app/oracle/product/19.3/dbhome_1/LINUX.X64_193000_db_home.zip
+        dest: /u01/app/oracle/product/19.3/dbhome_1
+        remote_src: true
+        owner: oracle
+        group: oinstall
+        mode: '0755'
+
+    - name: Change ownership of /u01 directory
+      file:
+        path: /u01
+        owner: oracle
+        group: oinstall
+        recurse: yes
+
+    - name: Create /u02/oradata directory
+      file:
+        path: /u02/oradata
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0755'
+
+    - name: Set ownership of /u02 directory
+      file:
+        path: /u02
+        owner: oracle
+        group: oinstall
+        state: directory
+        recurse: yes
+
+    - name: Set permissions of /u02 directory
+      file:
+        path: /u02
+        mode: '0777'
+        state: directory
+        recurse: yes
+
+    - name: Create directory
+      file:
+        path: /home/oracle/scripts
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0755'
+
+    - name: Create setEnv.sh script
+      copy:
+        content: |
+          # Oracle Settings
+          export TMP=/tmp
+          export TMPDIR=$TMP
+          export ORACLE_UNQNAME=cdb1
+          export ORACLE_BASE=/u01/app/oracle
+          export ORACLE_HOME=$ORACLE_BASE/product/19.3/dbhome_1
+          export ORA_INVENTORY=/u01/app/oraInventory
+          export ORACLE_SID=cdb1
+          export PDB_NAME=pdb1
+          export PATH=/usr/sbin:$PATH:$ORACLE_HOME/bin
+          export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+          export CLASSPATH=$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib
+        dest: /home/oracle/scripts/setEnv.sh
+        owner: oracle
+        group: oinstall
+        mode: '0644'
+    - name: Add setEnv.sh to .bash_profile
+      lineinfile:
+        dest: /home/oracle/.bash_profile
+        line: '. /home/oracle/scripts/setEnv.sh'
+        insertafter: EOF
+
+    - name: Create start_all.sh script
+      blockinfile:
+        dest: /home/oracle/scripts/start_all.sh
+        block: |
+          #!/bin/bash
+          . /home/oracle/scripts/setEnv.sh
+
+          export ORAENV_ASK=NO
+          . oraenv
+          export ORAENV_ASK=YES
+
+          dbstart /u01/app/oracle/product/19.3/dbhome_1/
+
+    - name: Create stop_all.sh script
+      blockinfile:
+        dest: /home/oracle/scripts/stop_all.sh
+        block: |
+          #!/bin/bash
+          . /home/oracle/scripts/setEnv.sh
+
+          export ORAENV_ASK=NO
+          . oraenv
+          export ORAENV_ASK=YES
+
+          dbshut /u01/app/oracle/product/19.3/dbhome_1
+
+    - name: Set ownership of script directory
+      file:
+        path: /home/oracle/scripts
+        owner: oracle
+        group: oinstall
+        recurse: yes
+
+    - name: Set execute permissions for scripts
+      file:
+        path: /home/oracle/scripts/start_all.sh
+        mode: 'u+x'    
+    - name: Set execute permissions for stop scripts
+      file:
+        path: /home/oracle/scripts/stop_all.sh
+        mode: 'u+x'    
+ 
+ 
+    - name: Set CV_ASSUME_DISTID environment variable
+      lineinfile:
+        dest: /etc/environment
+        line: 'CV_ASSUME_DISTID=OEL7.6'
+        state: present
+    - name: Create directory
+      file:
+        path: /home/oracle/scripts
+        state: directory
+        owner: oracle
+        group: oinstall
+        mode: '0755'
+    - name: Check if swapfile is already created
+      stat:
+        path: /swapfile1
+      register: swapfile_check
+    - name: Disable swapfile
+      command: swapoff /swapfile1
+      ignore_errors: true
+    - name: Remove swapfile if already created
+      become: true
+      file:
+        path: /swapfile1
+        state: absent
+      when: swapfile_check.stat.exists
+
+    - name: Create swapfile
+      command: dd if=/dev/zero of=/swapfile1 bs=1024 count=524288
+      changed_when: true
+      register: dd_result
+      ignore_errors: true
+
+    - name: Set permissions for swapfile
+      file:
+        path: /swapfile1
+        owner: root
+        group: root
+        mode: '0600'
+      when: dd_result is success
+
+    - name: Set up swap on the swapfile
+      command: mkswap /swapfile1
+      when: dd_result is success
+
+    - name: Enable swapfile
+      command: swapon /swapfile1
+      when: dd_result is success
+
+    - name: Update fstab to enable swap on boot
+      lineinfile:
+        path: /etc/fstab
+        line: '/swapfile1   swap    swap    defaults    0   0'
+        state: present
+      when: dd_result is success
+    
+    - name: Download compat-libstdc++-33 package
+      get_url:
+        url: https://www.rpmfind.net/linux/centos/7.9.2009/os/x86_64/Packages/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+        dest: /tmp/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+    - name: Check if package is already installed
+      command: rpm -q compat-libstdc++-33-3.2.3-72.el7.x86_64
+      register: package_check
+      ignore_errors: true
+
+    - name: Install package if not already installed
+      command: rpm -ivh /tmp/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
+      when: package_check.rc != 0
+
+    - name: Download Oracle preinstall RPM
+      get_url:
+        url: "https://yum.oracle.com/repo/OracleLinux/OL7/latest/x86_64/getPackage/oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm"
+        dest: "/tmp/oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm"
+    - name: Check if preinstall package is already installed
+      command: rpm -q oracle-database-preinstall-19c-1.0-1.el7.x86_64
+      register: pre_check
+      ignore_errors: true
+
+    - name: Install Oracle preinstall RPM
+      command: rpm -ivh /tmp/oracle-database-preinstall-19c-1.0-1.el7.x86_64.rpm
+      when: pre_check.rc != 0
+
+
+    - name: Delete files in oraInventory directory
+      shell: rm -rf /u01/app/oraInventory/*
+      args:
+        warn: false 
+  
+    - name: Run Oracle Installer
+      become: true
+      become_user: oracle
+      become_method: su
+      shell: >
+        ./runInstaller -ignorePrereq -waitforcompletion -silent -responseFile /u01/app/oracle/product/19.3/dbhome_1/install/response/db_install.rsp oracle.install.option=INSTALL_DB_SWONLY UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/u01/app/oraInventory SELECTED_LANGUAGES=en,en_GB ORACLE_BASE=/u01/app/oracle/ ORACLE_HOME=/u01/app/oracle/product/19.3/dbhome_1 oracle.install.db.InstallEdition=EE oracle.install.db.OSDBA_GROUP=dba oracle.install.db.OSBACKUPDBA_GROUP=dba oracle.install.db.OSDGDBA_GROUP=dba oracle.install.db.OSKMDBA_GROUP=dba oracle.install.db.OSRACDBA_GROUP=dba SECURITY_UPDATES_VIA_MYORACLESUPPORT=false DECLINE_SECURITY_UPDATES=true
+      args:
+        chdir: /u01/app/oracle/product/19.3/dbhome_1
+        warn: true    
+  handlers:
+    - name: Reboot server
+      reboot:
+
