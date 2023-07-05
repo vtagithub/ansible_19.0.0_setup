@@ -248,7 +248,33 @@
         owner: oracle
         group: oinstall
         recurse: yes
+    - name: Create start_all.sh file
+      copy:
+        content: |
+          #!/bin/bash
+          . /home/oracle/scripts/setEnv.sh
 
+          export ORAENV_ASK=NO
+          . oraenv
+          export ORAENV_ASK=YES
+
+          dbstart /u01/app/oracle/product/19.3/dbhome_1/
+        dest: /home/oracle/scripts/start_all.sh
+        mode: u+x
+
+    - name: Create stop_all.sh file
+      copy:
+        content: |
+          #!/bin/bash
+          . /home/oracle/scripts/setEnv.sh
+
+          export ORAENV_ASK=NO
+          . oraenv
+          export ORAENV_ASK=YES
+
+          dbshut /u01/app/oracle/product/19.3/dbhome_1
+        dest: /home/oracle/scripts/stop_all.sh
+        mode: u+x
     - name: Set execute permissions for scripts
       file:
         path: /home/oracle/scripts/start_all.sh
@@ -354,7 +380,7 @@
         ./runInstaller -ignorePrereq -waitforcompletion -silent -responseFile /u01/app/oracle/product/19.3/dbhome_1/install/response/db_install.rsp oracle.install.option=INSTALL_DB_SWONLY UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/u01/app/oraInventory SELECTED_LANGUAGES=en,en_GB ORACLE_BASE=/u01/app/oracle/ ORACLE_HOME=/u01/app/oracle/product/19.3/dbhome_1 oracle.install.db.InstallEdition=EE oracle.install.db.OSDBA_GROUP=dba oracle.install.db.OSBACKUPDBA_GROUP=dba oracle.install.db.OSDGDBA_GROUP=dba oracle.install.db.OSKMDBA_GROUP=dba oracle.install.db.OSRACDBA_GROUP=dba SECURITY_UPDATES_VIA_MYORACLESUPPORT=false DECLINE_SECURITY_UPDATES=true
       args:
         chdir: /u01/app/oracle/product/19.3/dbhome_1
-        warn: true    
+      ignore_errors: yes    
   handlers:
     - name: Reboot server
       reboot:
