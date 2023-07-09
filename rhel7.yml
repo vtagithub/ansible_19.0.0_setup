@@ -215,7 +215,18 @@
         dest: /home/oracle/.bash_profile
         line: '. /home/oracle/scripts/setEnv.sh'
         insertafter: EOF
-
+    - name: Delete start_all.sh file
+      file:
+        path: /home/oracle/scripts/start_all.sh
+        state: absent
+    - name: Delete stop_all.sh file
+      file:
+        path: /home/oracle/scripts/stop_all.sh
+        state: absent    
+    - name: Create the empty start_all.sh file
+      file:
+        path: /home/oracle/scripts/start_all.sh
+        state: touch      
     - name: Create start_all.sh script
       blockinfile:
         dest: /home/oracle/scripts/start_all.sh
@@ -228,7 +239,10 @@
           export ORAENV_ASK=YES
 
           dbstart /u01/app/oracle/product/19.3/dbhome_1/
-
+    - name: Create the empty stop_all.sh file
+      file:
+        path: /home/oracle/scripts/stop_all.sh
+        state: touch      
     - name: Create stop_all.sh script
       blockinfile:
         dest: /home/oracle/scripts/stop_all.sh
@@ -248,33 +262,7 @@
         owner: oracle
         group: oinstall
         recurse: yes
-    - name: Create start_all.sh file
-      copy:
-        content: |
-          #!/bin/bash
-          . /home/oracle/scripts/setEnv.sh
 
-          export ORAENV_ASK=NO
-          . oraenv
-          export ORAENV_ASK=YES
-
-          dbstart /u01/app/oracle/product/19.3/dbhome_1/
-        dest: /home/oracle/scripts/start_all.sh
-        mode: u+x
-
-    - name: Create stop_all.sh file
-      copy:
-        content: |
-          #!/bin/bash
-          . /home/oracle/scripts/setEnv.sh
-
-          export ORAENV_ASK=NO
-          . oraenv
-          export ORAENV_ASK=YES
-
-          dbshut /u01/app/oracle/product/19.3/dbhome_1
-        dest: /home/oracle/scripts/stop_all.sh
-        mode: u+x
     - name: Set execute permissions for scripts
       file:
         path: /home/oracle/scripts/start_all.sh
@@ -352,6 +340,17 @@
     - name: Install package if not already installed
       command: rpm -ivh /tmp/compat-libstdc++-33-3.2.3-72.el7.x86_64.rpm
       when: package_check.rc != 0
+    - name: Install required dependencies
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - bind-utils
+        - compat-libcap1
+        - glibc-devel
+        - psmisc
+        - xorg-x11-utils
+        - xorg-x11-xauth
 
     - name: Download Oracle preinstall RPM
       get_url:
